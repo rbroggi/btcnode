@@ -1,0 +1,32 @@
+# /etc/systemd/system/bitcoind.service
+
+[Unit]
+Description=Bitcoind Server
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=<PROJECT_DIR>
+ExecStart=<DOCKER_COMPOSE_PATH> up -d
+ExecStop=<DOCKER_COMPOSE_PATH> down
+TimeoutStartSec=10
+User=<USER>
+Group=docker
+
+#### Hardening
+# Disallow the process and all of its children to gain
+# new privileges through execve().
+NoNewPrivileges=true
+
+# Use a new /dev namespace only populated with API pseudo devices
+# such as /dev/null, /dev/zero and /dev/random.
+PrivateDevices=true
+
+# Deny the creation of writable and executable memory mappings.
+MemoryDenyWriteExecute=true
+
+
+[Install]
+WantedBy=multi-user.target
