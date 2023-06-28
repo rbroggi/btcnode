@@ -6,6 +6,7 @@
 from argparse import ArgumentParser
 from getpass import getpass
 from secrets import token_hex, token_urlsafe
+from sys import stdout
 import hmac
 
 def generate_salt(size):
@@ -23,18 +24,14 @@ def password_to_hmac(salt, password):
 def main():
     parser = ArgumentParser(description='Create login credentials for a JSON-RPC user')
     parser.add_argument('username', help='the username for authentication')
-    parser.add_argument('password', help='leave empty to generate a random password or specify "-" to prompt for password', nargs='?')
     args = parser.parse_args()
 
+    args.password = getpass()
     pwd_confirm = ''
-    if not args.password:
-        args.password = generate_password()
-    elif args.password == '-':
-        args.password = getpass()
-        pwd_confirm = getpass()
-        if pwd_confirm != args.password:
-            print('password and password-confirm do not match')
-            raise ValueError("Password and password-confirm do not match")
+    pwd_confirm = getpass()
+    if pwd_confirm != args.password:
+        print('password and password-confirm do not match')
+        raise ValueError("Password and password-confirm do not match")
 
     # Create 16 byte hex salt
     salt = generate_salt(16)
@@ -42,20 +39,18 @@ def main():
 
     auth_string = f'rpcauth={args.username}:{salt}${password_hmac}'
 
-    replace_line('bitcoin/bitcoin.conf', 'rpcauth=', auth_string)
+    replace_line('bitcoin/bitcoin.template.conf', 'bitcoin/bitcoin.conf', 'rpcauth=', auth_string)
 
 
-    print('String to be appended to bitcoin.conf:')
-
-
-def replace_line(file_path, search_text, replacement):
-    with open(file_path, 'r') as file:
+def replace_line(template_file_path, destination_file_path, search_text, replacement):
+    with open(template_file_path, 'r') as file:
         lines = file.readlines()
 
-    with open(file_path, 'w') as file:
+    with open(destination_file_path, 'w') as file:
         for line in lines:
-            if search_text in line and not line.startswith('#'):
-                line = replacement + '\n'
+            if line.strip() and line and line.strip()[0] != '#':
+                if search_text in line:
+                    line = replacement + '\n'
             file.write(line)
 
 
