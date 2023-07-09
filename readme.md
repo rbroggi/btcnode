@@ -124,6 +124,8 @@ and also configure some kind of alert if it approaches too much a block-height t
 $ echo $(( <<<here_goes_the_block_height_you_are_interested>>> - $(bitcoin-cli getblockchaininfo | jq '.pruneheight')))
 ```
 
+For more `bitcoin-cli` RPCs, refer to [this](https://developer.bitcoin.org/reference/rpc/index.html).
+
 ## Data
 
 `bitcoin` is mounted in the docker container, and it's where the blockchain is downloaded.
