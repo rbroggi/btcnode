@@ -92,6 +92,8 @@ To access your node from the internet, I would suggest you to configure port for
 to forward your sshd port. This would allow you to ssh into your node and perform the tunneling technique
 explained above using your public IP instead of your local `mDNS` address or your local network address. 
 
+Consider reading about best-practices whenever exposing your services to the internet.
+
 If you configure properly your ssh daemon with a security key (e.g. [Yubikey](https://www.yubico.com/)) your ssh authentication would be protected 
 by a hardware-device.
 
