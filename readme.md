@@ -55,6 +55,73 @@ To access your node, you can [ssh tunnel the port 8332](https://linuxize.com/pos
 your local machine to the node (or VM) running the docker-compose environment, and then simply connect to the port
 `8332`.
 
+```shell
+ssh -L 8332:localhost:8332 <your_user_name>@<remote_host>
+```
+
+### Linux [mDNS](https://en.wikipedia.org/wiki/Multicast_DNS) for simplifying your local setup
+
+When you only need to access your node from a client hosted in the same network, it is convenient
+to start an `mDNS` in your node. Checkout for example [Avahi](https://wiki.archlinux.org/title/avahi).
+
+This allows you to refer to your host with a local DNS name without worrying about having a fixed IP 
+assigned to your node in your local network. As an alternative you could configure your home router to
+assign a static IP to your node and edit your `/etc/hosts` file in the client to configure your node with 
+an alias which is easier to remember than the local IP address. 
+
+You can than simplify your ssh client configuration for tunneling by including the following content into
+your `~/.ssh/config`
+
+```shell
+Host btcnode
+  HostName <your-configured-mDNS-or-static-IP>
+  User <your_user>
+  Port <your_server_sshd_port_usually_22>
+  IdentityFile <the_key_file_for_ssh_connection>
+```
+
+which allows you to login with simply:
+
+```shell
+ssh -L 8332:localhost:8332 btcnode
+```
+
+### Accessing the node from the internet
+
+To access your node from the internet, I would suggest you to configure port forwarding in your router
+to forward your sshd port. This would allow you to ssh into your node and perform the tunneling technique
+explained above using your public IP instead of your local `mDNS` address or your local network address. 
+
+If you configure properly your ssh daemon with a security key (e.g. [Yubikey](https://www.yubico.com/)) your ssh authentication would be protected 
+by a hardware-device.
+
+## Useful commands for monitoring prune node:
+
+In your server running the docker-compose spec, it's handy to alias the following for interacting with
+the `bitcoind` server running inside the docker-compose runtime:
+
+```shell
+alias bitcoin-cli='docker exec bitcoind bitcoin-cli
+```
+
+You can then check the status of your [blockchain info](https://developer.bitcoin.org/reference/rpc/getblockchaininfo.html):
+
+```shell
+$ bitcoin-cli getblockchaininfo
+```
+
+and if you have [jq](https://jqlang.github.io/jq/) installed you can monitor your oldest block in a typical prune node:
+
+```shell
+$ bitcoin-cli getblockchaininfo | jq '.pruneheight'
+```
+
+and also configure some kind of alert if it approaches too much a block-height that you are not willing to prune:
+
+```shell
+$ echo $(( <<<here_goes_the_block_height_you_are_interested>>> - $(bitcoin-cli getblockchaininfo | jq '.pruneheight')))
+```
+
 ## Data
 
 `bitcoin` is mounted in the docker container, and it's where the blockchain is downloaded.
@@ -73,3 +140,5 @@ your local machine to the node (or VM) running the docker-compose environment, a
 * [bitcoind RPC API Reference](https://developer.bitcoin.org/reference/rpc/)
 * [bitcoind API list](https://en.bitcoin.it/wiki/Original_Bitcoin_client/API_calls_list)
 * [enable debug log level in bitcoind](https://bitcoin.stackexchange.com/questions/66892/what-are-the-debug-categories)
+* [Bitcoind configurations](https://riptutorial.com/bitcoin/example/26000/node-configuration)
+* [TOR arguments](https://2019.www.torproject.org/docs/tor-manual.html.en)
