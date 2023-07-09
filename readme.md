@@ -128,6 +128,17 @@ $ echo $(( <<<here_goes_the_block_height_you_are_interested>>> - $(bitcoin-cli g
 
 `bitcoin` is mounted in the docker container, and it's where the blockchain is downloaded.
 
+## Use tor as SOCKS proxy 
+
+If you want to consult some websites from your workstation hosted in the same network as the node above
+you can leverage the tor proxy to mask your public IP address by using it as proxy (at the price of having 
+a less performant browsing experience). Check the documentation of your browser for how to configure a SOCKS 
+proxy. The address of your proxy will be `<your-node-ip>:9050`. 
+
+A legit reason/situation for doing that is when you want to check in [mem.pool](https://mempool.space/) for
+a block that might contain a transaction that involves one of your wallets. You can consume the public service
+in a convenient way without having to disclose your IP.
+
 ## References
 
 * [host your hidden service with onion addresses](https://null-byte.wonderhowto.com/how-to/host-your-own-tor-hidden-service-with-custom-onion-address-0180159/)
