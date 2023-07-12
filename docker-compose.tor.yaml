@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  bitcoind:
+    networks:
+      - btc
+
+  tor:
+    volumes:
+      - ./tor/torrc.tor:/etc/tor/torrc:ro
+      - ./tor/bitcoin_hidden/:/var/lib/tor/bitcoin_hidden/

@@ -21,9 +21,6 @@ services:
     networks:
       - btc
     restart: on-failure
-    volumes:
-      - ./tor/torrc:/etc/tor/torrc:ro
-      - ./tor/bitcoin_hidden/:/var/lib/tor/bitcoin_hidden/
     expose:
       - 9050
     ports:

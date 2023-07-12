@@ -73,9 +73,10 @@ CookieAuthFileGroupReadable 1
 ## HiddenServicePort x y:z says to redirect requests on port x to the
 ## address y:z.
 
-# local version does not expose to tor hidden service
-# HiddenServiceDir /var/lib/tor/bitcoin_hidden/
-# HiddenServicePort 8332 bitcoind:8332
+# notice that here we expose the hidden service through the tailscaled container
+# since bitcoind belongs to the same network namespace as tailscaled
+HiddenServiceDir /var/lib/tor/bitcoin_hidden/
+HiddenServicePort 8332 tailscaled:8332
 
 #HiddenServiceDir @LOCALSTATEDIR@/lib/tor/other_hidden_service/
 #HiddenServicePort 80 127.0.0.1:80

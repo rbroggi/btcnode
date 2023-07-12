@@ -1,4 +1,6 @@
 BTC_RPC_SERVER_ADDR?=127.0.0.1:8332
+DOCKER_COMPOSE_CMD := $(shell which docker-compose)
+DOCKER_CMD := $(shell which docker)
 
 default: help
 
@@ -8,43 +10,63 @@ generate_bitcoind_conf:
 ifndef BTC_USER
 	$(error BTC_USER is not provided. Usage: make generate_bitcoind_conf BTC_USER=something)
 endif
-	docker run -it --rm  -u "$(shell id -u)":"$(shell shell id -u)" -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp python:3.12.0b3-alpine3.18 python rpcauth.py $(BTC_USER)
+	$(DOCKER_CMD) run -it --rm  -u "$(shell id -u)":"$(shell shell id -u)" -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp python:3.12.0b3-alpine3.18 python rpcauth.py $(BTC_USER)
 
-.PHONY: up
-## up: starts the compose environment.
-up:
-	docker-compose -f docker-compose.base.yaml -f docker-compose.vpn.yaml up -d
+.PHONY: up_local
+## up_local: starts the compose environment where bitcoind is exposed locally to the node.
+up_local:
+	$(DOCKER_COMPOSE_CMD) -f docker-compose.base.yaml -f docker-compose.local.yaml up -d
 
-.PHONY: down
-## down: tears down the docker compose environment.
-down:
-	docker-compose -f docker-compose.base.yaml -f docker-compose.vpn.yaml down
+.PHONY: down_local
+## down_local: tears down the docker compose environment.
+down_local:
+	$(DOCKER_COMPOSE_CMD) -f docker-compose.base.yaml -f docker-compose.local.yaml down
 
-.PHONY: env
-## env: requires user to insert mandatory environment variables and dumps them to a `.env` file
-env:
+.PHONY: .env
+## .env: requires user to insert mandatory environment variables and dumps them to a `.env` file.
+.env:
 	@read -p "Enter the tailscale token: " token; \
 	echo "TS_AUTHKEY=$$token" > .env
 
 .PHONY: up_vpn
 ## up_vpn: starts the compose environment exposing the bitcoind node through tailscaled (VPN).
-up_vpn:
-	docker-compose --env-file ./.env -f docker-compose.base.yaml -f docker-compose.vpn.yaml up -d
+up_vpn: .env
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.vpn.yaml up -d
 
 .PHONY: down_vpn
 ## down_vpn: tears down the docker compose vpn environment.
 down_vpn:
-	docker-compose --env-file ./.env -f docker-compose.base.yaml -f docker-compose.vpn.yaml down
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.vpn.yaml down
+
+.PHONY: up_tor
+## up_tor: starts the compose environment exposing the bitcoind node through tor hidden services.
+up_tor:
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.tor.yaml up -d
+
+.PHONY: down_tor
+## down_tor: tears down the docker compose tor environment.
+down_tor:
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.tor.yaml down
+
+.PHONY: up_all
+## up_all: starts the compose environment exposing the bitcoind node locally, through VPN, and through tor hidden services.
+up_all: .env
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.all.yaml up -d
+
+.PHONY: down_all
+## down_all: tears down the docker compose all environment.
+down_all:
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.all.yaml down
 
 .PHONY: up_vpn_host
 ## up_vpn_host: starts VPN in the host system.
 up_vpn_host:
-	docker-compose --env-file ./.env -f docker-compose.hostvpn.yaml up -d
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.hostvpn.yaml up -d
 
 .PHONY: down_vpn_host
 ## down_vpn_host: tears down VPN in the host system.
 down_vpn_host:
-	docker-compose --env-file ./.env -f docker-compose.hostvpn.yaml up -d
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.hostvpn.yaml up -d
 
 .PHONY: test_btc_rpc
 ## test_btc_rpc: once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
@@ -71,9 +93,9 @@ recycle_svc:
 ifndef SVC
 	$(error SVC is not provided. Usage: make recycle_svc SVC=something)
 endif
-	docker-compose stop $(SVC)
-	docker-compose rm -f $(SVC)
-	docker-compose up -d --no-deps $(SVC)
+	$(DOCKER_COMPOSE_CMD) stop $(SVC)
+	$(DOCKER_COMPOSE_CMD) rm -f $(SVC)
+	$(DOCKER_COMPOSE_CMD) up -d --no-deps $(SVC)
 
 .PHONY: restart_svc
 ## restart_svc: restarts a service. This will only refresh service-specific configurations (torrc, bitcoin.conf), and not docker-compose.base.yaml updates.
@@ -81,7 +103,7 @@ restart_svc:
 ifndef SVC
 	$(error SVC is not provided. Usage: make restart_svc SVC=something)
 endif
-	docker-compose restart $(SVC)
+	$(DOCKER_COMPOSE_CMD) restart $(SVC)
 
 .PHONY: rotate_btc_user_credentials
 ## rotate_btc_user_credentials: rotates the credentials of the user configured to have access to bitcoind RPC APIs.
@@ -92,10 +114,23 @@ endif
 	python rpcauth.py $(BTC_USER)
 
 .PHONY: generate_service_spec
-## generate_service_spec: generates the 'bitcoind.service' systemd specs replacing some environment parameters (project folder and user) 
-generate_service_spec:
+## generate_service_spec: generates the 'bitcoind.service' systemd specs replacing some environment parameters (project folder and user).
+generate_service_spec: .env
+	@echo "Choose an option:"
+	@echo "1. local only"
+	@echo "2. tor only"
+	@echo "3. vpn only"
+	@echo "4. local, tor, and vpn"
+	@read -p "Enter the option number (1-4): " option; \
+	case $$option in \
+		1) target_suffix="_local";; \
+		2) target_suffix="_tor";; \
+		3) target_suffix="_vpn";; \
+		4) target_suffix="_all";; \
+		*) echo "Invalid option"; exit 1;; \
+	esac; \
 	cat bitcoind.template.service | sed "s/<USER>/$(shell whoami)/g" | sed "s|<PROJECT_DIR>|$(shell pwd)|g"  \
-                | sed "s|<DOCKER_COMPOSE_PATH>|$(shell which docker-compose)|g" > bitcoind.service
+                | sed "s|<TARGET_SUFFIX>|$(target_suffix)|g" > bitcoind.service
 
 .PHONY: help
 ## help: prints this help message.
