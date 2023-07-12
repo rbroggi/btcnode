@@ -1,2 +1,3 @@
 bitcoind.service
 bitcoin/bitcoin.conf
+.env
