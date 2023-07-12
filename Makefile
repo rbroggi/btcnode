@@ -43,7 +43,7 @@ up_vpn_host:
 
 .PHONY: down_vpn_host
 ## down_vpn_host: tears down VPN in the host system.
-up_vpn_host:
+down_vpn_host:
 	docker-compose --env-file ./.env -f docker-compose.hostvpn.yaml up -d
 
 .PHONY: test_btc_rpc
