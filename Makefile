@@ -76,8 +76,8 @@ down_all:
 ## up_vpn_host: starts VPN in the host system.
 up_vpn_host:
 ifeq ("$(wildcard .env.host)","")
-	@echo ".env file does not exist. Generating..."
-	@$(MAKE) .env
+	@echo ".env.host file does not exist. Generating..."
+	@$(MAKE) .env.host
 endif
 	$(DOCKER_COMPOSE_CMD) --env-file ./.env.host -f docker-compose.hostvpn.yaml up -d
 
