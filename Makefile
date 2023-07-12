@@ -30,7 +30,7 @@ down_local:
 
 .PHONY: up_vpn
 ## up_vpn: starts the compose environment exposing the bitcoind node through tailscaled (VPN).
-up_vpn: .env
+up_vpn:
 ifeq ("$(wildcard .env)","")
 	@echo ".env file does not exist. Generating..."
 	@$(MAKE) .env
@@ -54,7 +54,7 @@ down_tor:
 
 .PHONY: up_all
 ## up_all: starts the compose environment exposing the bitcoind node locally, through VPN, and through tor hidden services.
-up_all: .env
+up_all:
 ifeq ("$(wildcard .env)","")
 	@echo ".env file does not exist. Generating..."
 	@$(MAKE) .env
