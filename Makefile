@@ -31,6 +31,10 @@ down_local:
 .PHONY: up_vpn
 ## up_vpn: starts the compose environment exposing the bitcoind node through tailscaled (VPN).
 up_vpn: .env
+ifeq ("$(wildcard .env)","")
+	@echo ".env file does not exist. Generating..."
+	@$(MAKE) .env
+endif
 	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.vpn.yaml up -d
 
 .PHONY: down_vpn
@@ -51,6 +55,10 @@ down_tor:
 .PHONY: up_all
 ## up_all: starts the compose environment exposing the bitcoind node locally, through VPN, and through tor hidden services.
 up_all: .env
+ifeq ("$(wildcard .env)","")
+	@echo ".env file does not exist. Generating..."
+	@$(MAKE) .env
+endif
 	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.all.yaml up -d
 
 .PHONY: down_all
@@ -115,7 +123,11 @@ endif
 
 .PHONY: generate_service_spec
 ## generate_service_spec: generates the 'bitcoind.service' systemd specs replacing some environment parameters (project folder and user).
-generate_service_spec: .env
+generate_service_spec:
+ifeq ("$(wildcard .env)","")
+	@echo ".env file does not exist. Generating..."
+	@$(MAKE) .env
+endif
 	@echo "Choose an option:"
 	@echo "1. local only"
 	@echo "2. tor only"
@@ -123,14 +135,15 @@ generate_service_spec: .env
 	@echo "4. local, tor, and vpn"
 	@read -p "Enter the option number (1-4): " option; \
 	case $$option in \
-		1) target_suffix="_local";; \
-		2) target_suffix="_tor";; \
-		3) target_suffix="_vpn";; \
-		4) target_suffix="_all";; \
+		1) target_suffix="local";; \
+		2) target_suffix="tor";; \
+		3) target_suffix="vpn";; \
+		4) target_suffix="all";; \
 		*) echo "Invalid option"; exit 1;; \
 	esac; \
+	echo "$$target_suffix"; \
 	cat bitcoind.template.service | sed "s/<USER>/$(shell whoami)/g" | sed "s|<PROJECT_DIR>|$(shell pwd)|g"  \
-                | sed "s|<TARGET_SUFFIX>|$(target_suffix)|g" > bitcoind.service
+                | sed "s|<TARGET_SUFFIX>|$$target_suffix|g" > bitcoind.service
 
 .PHONY: help
 ## help: prints this help message.
