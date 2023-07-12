@@ -4,8 +4,6 @@ services:
     container_name: bitcoind
     user: 1000:1000
     image: lncm/bitcoind:v25.0
-    networks:
-      - btc
     logging:
       options:
         max-size: 50m

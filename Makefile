@@ -13,12 +13,12 @@ endif
 .PHONY: up
 ## up: starts the compose environment.
 up:
-	docker-compose up -d
+	docker-compose -f docker-compose.base.yaml -f docker-compose.vpn.yaml up -d
 
 .PHONY: down
 ## down: tears down the docker compose environment.
 down:
-	docker-compose down
+	docker-compose -f docker-compose.base.yaml -f docker-compose.vpn.yaml down
 
 .PHONY: env
 ## env: requires user to insert mandatory environment variables and dumps them to a `.env` file
@@ -29,12 +29,12 @@ env:
 .PHONY: up_vpn
 ## up_vpn: starts the compose environment exposing the bitcoind node through tailscaled (VPN).
 up_vpn:
-	docker-compose --env-file ./.env -f docker-compose.yaml -f docker-compose.vpn.yaml up -d
+	docker-compose --env-file ./.env -f docker-compose.base.yaml -f docker-compose.vpn.yaml up -d
 
 .PHONY: down_vpn
 ## down_vpn: tears down the docker compose vpn environment.
 down_vpn:
-	docker-compose --env-file ./.env -f docker-compose.yaml -f docker-compose.vpn.yaml down
+	docker-compose --env-file ./.env -f docker-compose.base.yaml -f docker-compose.vpn.yaml down
 
 .PHONY: up_vpn_host
 ## up_vpn_host: starts VPN in the host system.
@@ -66,7 +66,7 @@ endif
 	curl --socks5-hostname 127.0.0.1:9050  --user $(BTC_USER) -w "\n\nHTTP Status: %{http_code}" --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' http://$(BTC_RPC_SERVER_ONION_ADDR)
 
 .PHONY: recycle_svc
-## recycle_svc: recycle a service taking into account docker-compose.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc)
+## recycle_svc: recycle a service taking into account docker-compose.base.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc)
 recycle_svc:
 ifndef SVC
 	$(error SVC is not provided. Usage: make recycle_svc SVC=something)
@@ -76,7 +76,7 @@ endif
 	docker-compose up -d --no-deps $(SVC)
 
 .PHONY: restart_svc
-## restart_svc: restarts a service. This will only refresh service-specific configurations (torrc, bitcoin.conf), and not docker-compose.yaml updates.
+## restart_svc: restarts a service. This will only refresh service-specific configurations (torrc, bitcoin.conf), and not docker-compose.base.yaml updates.
 restart_svc:
 ifndef SVC
 	$(error SVC is not provided. Usage: make restart_svc SVC=something)
