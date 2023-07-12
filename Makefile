@@ -28,6 +28,12 @@ down_local:
 	@read -p "Enter the tailscale token: " token; \
 	echo "TS_AUTHKEY=$$token" > .env
 
+.PHONY: .env.host
+## .env.host: requires user to insert mandatory environment variables and dumps them to a `.env.host` file.
+.env.host:
+	@read -p "Enter the tailscale token for host: " token; \
+	echo "TS_AUTHKEY=$$token" > .env.host
+
 .PHONY: up_vpn
 ## up_vpn: starts the compose environment exposing the bitcoind node through tailscaled (VPN).
 up_vpn:
@@ -69,12 +75,16 @@ down_all:
 .PHONY: up_vpn_host
 ## up_vpn_host: starts VPN in the host system.
 up_vpn_host:
-	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.hostvpn.yaml up -d
+ifeq ("$(wildcard .env.host)","")
+	@echo ".env file does not exist. Generating..."
+	@$(MAKE) .env
+endif
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env.host -f docker-compose.hostvpn.yaml up -d
 
 .PHONY: down_vpn_host
 ## down_vpn_host: tears down VPN in the host system.
 down_vpn_host:
-	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.hostvpn.yaml up -d
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env.host -f docker-compose.hostvpn.yaml down
 
 .PHONY: test_btc_rpc
 ## test_btc_rpc: once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
