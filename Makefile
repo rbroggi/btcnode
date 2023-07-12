@@ -93,7 +93,10 @@ endif
 ifndef BTC_RPC_SERVER_ONION_ADDR
 	$(error BTC_RPC_SERVER_ONION_ADDR is not provided. Usage: make test_btc_rpc_over_tor BTC_RPC_SERVER_ONION_ADDR=something)
 endif
-	curl --socks5-hostname 127.0.0.1:9050  --user $(BTC_USER) -w "\n\nHTTP Status: %{http_code}" --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' http://$(BTC_RPC_SERVER_ONION_ADDR)
+ifndef TOR_PROXY
+	$(error TOR_PROXY is not provided. Usage: make test_btc_rpc_over_tor TOR_PROXY=something)
+endif
+	curl --socks5-hostname $(TOR_PROXY)  --user $(BTC_USER) -w "\n\nHTTP Status: %{http_code}" --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' http://$(BTC_RPC_SERVER_ONION_ADDR)
 
 .PHONY: recycle_svc
 ## recycle_svc: recycle a service taking into account docker-compose.base.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc)
