@@ -15,5 +15,4 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     privileged: true
-    networks:
-      - host
+    network_mode: host
