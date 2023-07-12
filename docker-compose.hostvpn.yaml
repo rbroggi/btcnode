@@ -1,8 +1,8 @@
 version: '3.8'
 services:
   host-tailscale:
-    container_name: host-tailscale
-    hostname: host-tailscale
+    container_name: node.remote
+    hostname: node.remote
     image: tailscale/tailscale:stable
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
