@@ -74,7 +74,7 @@ CookieAuthFileGroupReadable 1
 ## address y:z.
 
 HiddenServiceDir /var/lib/tor/bitcoin_hidden/
-HiddenServicePort 8332 bitcoind:8332
+HiddenServicePort 8332 tailscaled:8332
 
 #HiddenServiceDir @LOCALSTATEDIR@/lib/tor/other_hidden_service/
 #HiddenServicePort 80 127.0.0.1:80

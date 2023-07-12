@@ -20,6 +20,32 @@ up:
 down:
 	docker-compose down
 
+.PHONY: env
+## env: requires user to insert mandatory environment variables and dumps them to a `.env` file
+env:
+	@read -p "Enter the tailscale token: " token; \
+	echo "TS_AUTHKEY=$$token" > .env
+
+.PHONY: up_vpn
+## up_vpn: starts the compose environment exposing the bitcoind node through tailscaled (VPN).
+up_vpn:
+	docker-compose --env-file ./.env -f docker-compose.yaml -f docker-compose.vpn.yaml up -d
+
+.PHONY: down_vpn
+## down_vpn: tears down the docker compose vpn environment.
+down_vpn:
+	docker-compose --env-file ./.env -f docker-compose.yaml -f docker-compose.vpn.yaml down
+
+.PHONY: up_vpn_host
+## up_vpn_host: starts VPN in the host system.
+up_vpn_host:
+	docker-compose --env-file ./.env -f docker-compose.hostvpn.yaml up -d
+
+.PHONY: down_vpn_host
+## down_vpn_host: tears down VPN in the host system.
+up_vpn_host:
+	docker-compose --env-file ./.env -f docker-compose.hostvpn.yaml up -d
+
 .PHONY: test_btc_rpc
 ## test_btc_rpc: once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
 test_btc_rpc:
@@ -27,6 +53,17 @@ ifndef BTC_USER
 	$(error BTC_USER is not provided. Usage: make test_btc_rpc BTC_USER=something)
 endif
 	curl --user $(BTC_USER) -w "\n\nHTTP Status: %{http_code}" --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' http://$(BTC_RPC_SERVER_ADDR)
+
+.PHONY: test_btc_rpc_over_tor
+## test_btc_rpc_over_tor: once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
+test_btc_rpc_over_tor:
+ifndef BTC_USER
+	$(error BTC_USER is not provided. Usage: make test_btc_rpc BTC_USER=something)
+endif
+ifndef BTC_RPC_SERVER_ONION_ADDR
+	$(error BTC_RPC_SERVER_ONION_ADDR is not provided. Usage: make test_btc_rpc_over_tor BTC_RPC_SERVER_ONION_ADDR=something)
+endif
+	curl --socks5-hostname 127.0.0.1:9050  --user $(BTC_USER) -w "\n\nHTTP Status: %{http_code}" --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' http://$(BTC_RPC_SERVER_ONION_ADDR)
 
 .PHONY: recycle_svc
 ## recycle_svc: recycle a service taking into account docker-compose.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc)
@@ -52,7 +89,7 @@ rotate_btc_user_credentials:
 ifndef BTC_USER
 	$(error BTC_USER is not provided. Usage: make testrotate_btc_user_credentials BTC_USER=something)
 endif
-	python rpcauth.py $(BTC_USER) -
+	python rpcauth.py $(BTC_USER)
 
 .PHONY: generate_service_spec
 ## generate_service_spec: generates the 'bitcoind.service' systemd specs replacing some environment parameters (project folder and user) 

@@ -12,26 +12,10 @@ services:
     restart: on-failure
     stop_grace_period: 15m30s
     ports:
-      - "8333:8333"
       - "127.0.0.1:8332:8332" # only local publication, use in conjuction with ssh tunnel
-      - "28333:28333"
-      - "127.0.0.1:28332:28332"
     volumes:
       - ./bitcoin:/data/.bitcoin
 
-  dummy:
-    container_name: dummy
-    user: 1000:1000
-    image: python:3.12.0b3-alpine3.18
-    networks:
-      - btc
-    working_dir: /usr/src/myapp
-    volumes:
-      - ./dummy:/usr/src/myapp
-    expose: 
-      - 8080
-    command: 'python -m http.server --bind 0.0.0.0 8080'
-      
   tor:
     container_name: tor
     user: "1000:1000"
@@ -44,7 +28,6 @@ services:
     volumes:
       - ./tor/torrc:/etc/tor/torrc:ro
       - ./tor/bitcoin_hidden/:/var/lib/tor/bitcoin_hidden/
-      - ./tor/dummy_hidden/:/var/lib/tor/dummy_hidden/
     expose:
       - 9050
     ports:

@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  host-tailscale:
+    container_name: host-tailscale
+    hostname: host-tailscale
+    image: tailscale/tailscale:stable
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_USERSPACE=TRUE
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - ./tailscale/host/var/lib:/var/lib
+      - ./tailscale/host/dev/net/tun:/dev/net/tun
+    cap_add: # Required for tailscale to work
+      - NET_ADMIN
+      - SYS_MODULE
+    privileged: true
+    networks:
+      - host

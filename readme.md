@@ -28,6 +28,7 @@ Usage:
   up                            starts the compose environment.
   down                          tears down the docker compose environment.
   test_btc_rpc                  once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
+  test_btc_rpc_over_tor         once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization over the tor network.
   recycle_svc                   recycle a service taking into account docker-compose.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc)
   restart_svc                   restarts a service. This will only refresh service-specific configurations (torrc, bitcoin.conf), and not docker-compose.yaml updates.
   rotate_btc_user_credentials   rotates the credentials of the user configured to have access to bitcoind RPC APIs.
@@ -51,13 +52,61 @@ to run this image, this might not be the your case. [Don't trust, verify](https:
 
 ## External access
 
+### Using ssh tunnel 
+
 To access your node, you can [ssh tunnel the port 8332](https://linuxize.com/post/how-to-setup-ssh-tunneling/) from
 your local machine to the node (or VM) running the docker-compose environment, and then simply connect to the port
 `8332`.
 
 ```shell
-ssh -L 8332:localhost:8332 <your_user_name>@<remote_host>
+$ ssh -L 8332:localhost:8332 <your_user_name>@<remote_host>
 ```
+
+Test that your node is reachable: 
+
+```shell
+$ curl --user <your_btc_user>  --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' localhost:8332
+```
+
+or 
+
+```shell
+$ make test_btc_rpc BTC_USER=<your_btc_user> BTC_RPC_SERVER_ADDR=127.0.0.1:8332
+```
+
+Pros:
+* fast access;
+* can protect your access using hardware-level ssh authentication;
+Cons:
+* If you are not in the same network as your node, you will have to port-forward your node to the public internet;
+
+### Using TOR 
+
+You can also Access your node through TOR network:
+
+```shell
+curl --socks5-hostname <tor_proxy> --user <your_btc_user>  --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' <your_hidden_service_onion_address>:8332
+```
+
+or
+
+```shell
+$ make test_btc_rpc_over_tor BTC_USER=<your_btc_user> BTC_RPC_SERVER_ONION_ADDR=<your_hidden_service_onion_address>:8332
+```
+
+PROS:
+* No need to have access to a router to port-forward your node service;
+* Accessible from anywhere as long as you have your onion address with you;
+CONS:
+* Very slow;
+
+### Using VPN ([Tailscale](https://tailscale.com/))
+
+where:
+
+* `<tor_proxy>` is typically `127.0.0.1:9050` but you will have to know where it is running in your system;
+* `<your_btc_user` is the login-user that you use to authenticate against your node;
+* `<your_hidden_service_onion_address>` is the onion address of the `bitcoind_hidden` service, which can be found under `tor/bitcoin_hidden/hostname`;
 
 ### Linux [mDNS](https://en.wikipedia.org/wiki/Multicast_DNS) for simplifying your local setup
 

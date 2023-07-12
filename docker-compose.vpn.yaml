@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  tailscaled:
+    container_name: tailscaled
+    hostname: tailscaled
+    image: tailscale/tailscale:v1.44.0
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_USERSPACE=TRUE
+      - TS_STATE_DIR=/var/lib/tailscale
+    volumes:
+      - ./tailscale/btc/var/lib:/var/lib
+      - ./tailscale/btc/dev/net/tun:/dev/net/tun
+    networks:
+      - btc
+
+  bitcoind:
+    network_mode: "service:tailscaled"
+
+  tor:
+    volumes:
+      # mount the vpn version of the torrc, where the hidden service exposes tailscaled:8332 instead of
+      # bitcoind:8332 (since the bitcoind service is in the same namespace as tailscaled instead of his own)
+      - ./tor/torrc.vpn:/etc/tor/torrc:ro
+      - ./tor/bitcoin_hidden/:/var/lib/tor/bitcoin_hidden/
