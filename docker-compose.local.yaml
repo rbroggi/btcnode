@@ -3,3 +3,5 @@ services:
   bitcoind:
     networks:
       - btc
+    ports:
+      - "127.0.0.1:8332:8332" # only local publication, use in conjuction with ssh tunnel

@@ -15,6 +15,9 @@ services:
       - btc
 
   bitcoind:
+    depends_on:
+      tailscaled:
+        condition: service_started
     network_mode: "service:tailscaled"
 
   tor:
