@@ -26,6 +26,18 @@ services:
     ports:
       - "9050:9050"
 
+  electrs:
+    cointainer_name: electrs
+    user: 1000:1000
+    build:
+      dockerfile: Dockerfile.electrs
+      context: .
+    restart: on-failure
+    volumes:
+      - ./bitcoin:/data/.bitcoin
+      - ./electrs:/data/.electrs
+      - ./electrs/electrs.local.toml:/etc/electrs/config.toml:ro
+
 networks:
   btc:
     driver: bridge

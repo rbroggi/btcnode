@@ -4,6 +4,15 @@ services:
     networks:
       - btc
 
+  electrs:
+    depends_on:
+      tailscaled:
+        condition: service_started
+      bitcoind:
+        condition: service_started
+    networks:
+      - btc
+
   tor:
     volumes:
       - ./tor/torrc.tor:/etc/tor/torrc:ro

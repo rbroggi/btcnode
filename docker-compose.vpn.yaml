@@ -20,6 +20,18 @@ services:
         condition: service_started
     network_mode: "service:tailscaled"
 
+  electrs:
+    depends_on:
+      tailscaled:
+        condition: service_started
+      bitcoind:
+        condition: service_started
+    network_mode: "service:tailscaled"
+    volumes:
+      - ./bitcoin:/data/.bitcoin
+      - ./electrs:/data/.electrs
+      - ./electrs/electrs.vpn.toml:/etc/electrs/config.toml:ro
+
   tor:
     volumes:
       # no tor hidden service
