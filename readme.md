@@ -17,8 +17,6 @@ for remote access.
 For an even stronger configuration, you can
 [secure your sshd with FIDO2](https://developers.yubico.com/SSH/Securing_SSH_with_FIDO2.html).
 
-The default setup runs a prune version of the bitcoin node  
-
 The optimal runtime environment for this service is a small server where you have the 
 possibility to ssh into. 
 
