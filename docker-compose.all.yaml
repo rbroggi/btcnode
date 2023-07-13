@@ -3,6 +3,7 @@ services:
   tailscaled:
     container_name: tailscaled
     hostname: tailscaled
+    user: 1000:1000
     image: tailscale/tailscale:v1.44.0
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}

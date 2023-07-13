@@ -14,7 +14,7 @@ services:
 
   tor:
     container_name: tor
-    user: "1000:1000"
+    user: 1000:1000
     build:
       dockerfile: Dockerfile.tor
       context: .
