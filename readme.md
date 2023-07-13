@@ -1,11 +1,22 @@
 # BTC Node
 
-This repo is basically a docker-compose environment featuring a 
-[bitcoind](https://bitcoin.org/en/full-node#other-linux-daemon) operating in conjunction 
-with [TOR](https://wiki.archlinux.org/title/tor)
+This repository, features some forms of self-hosting of bitcoin nodes:
+
+It makes usage of docker-compose environments to host and expose different node configurations. 
+
+The repository contains 3 branches, representing different hosting environments:
+
+1. [prune](https://github.com/rbroggi/btcnode/tree/prune): minimalist [bitcoind](https://en.bitcoin.it/wiki/Bitcoind) node pre-configured as 
+a [prune node](https://bitcoin.org/en/full-node#reduce-storage).
+2. [full](https://github.com/rbroggi/btcnode/tree/full): a full `bitcoind` node pre-configured to also
+index transactions ([txindex=1](https://bitcoin.stackexchange.com/questions/35707/what-are-pros-and-cons-of-txindex-option)).
+3. [electrs](https://github.com/rbroggi/btcnode/tree/electrs): a full `bitcoind` node with `txindex=1` along with an [electrs](https://github.com/romanz/electrs)
+electrum server. 
+
+In all configurations/environments `bitcoind` operates in conjunction with [TOR](https://wiki.archlinux.org/title/tor)
 for optimal security and anonymity. 
 
-The repo supports 4 basic ways of exposing your bitcoind service:
+The repo supports 4 basic ways of exposing your bitcoind/electrs service:
 
 1. `local` - service API only available in the node (`127.0.0.1`) where the docker-compose environment runs. 
 2. `tor` - service API exposed using a tor hidden service through an onion address.
