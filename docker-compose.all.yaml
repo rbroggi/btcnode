@@ -11,7 +11,6 @@ services:
       - TS_STATE_DIR=/var/lib/tailscale
     volumes:
       - ./tailscale/btc/var/lib:/var/lib
-      - ./tailscale/btc/dev/net/tun:/dev/net/tun
     ports:
       - "127.0.0.1:8332:8332" # only local publication, use in conjunction with ssh tunnel
     networks:

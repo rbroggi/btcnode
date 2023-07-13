@@ -10,7 +10,6 @@ services:
       - TS_STATE_DIR=/var/lib/tailscale
     volumes:
       - ./tailscale/host/var/lib:/var/lib
-      - ./tailscale/host/dev/net/tun:/dev/net/tun
     cap_add: # Required for tailscale to work
       - NET_ADMIN
       - SYS_MODULE
