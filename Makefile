@@ -109,7 +109,7 @@ endif
 	curl --socks5-hostname $(TOR_PROXY)  --user $(BTC_USER) -w "\n\nHTTP Status: %{http_code}" --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getblockchaininfo","params":[]}' -H 'content-type:text/plain;' http://$(BTC_RPC_SERVER_ONION_ADDR)
 
 .PHONY: recycle_svc
-## recycle_svc: recycle a service taking into account docker-compose.base.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc)
+## recycle_svc: recycle a service taking into account docker-compose.base.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc).
 recycle_svc:
 ifndef SVC
 	$(error SVC is not provided. Usage: make recycle_svc SVC=something)

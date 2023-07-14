@@ -4,7 +4,7 @@ This repository, features some forms of self-hosting of bitcoin nodes:
 
 It makes usage of docker-compose environments to host and expose different node configurations. 
 
-The repository contains 3 branches, representing different hosting environments:
+The repository contains 3 branches, representing different hosting environments configurations:
 
 1. [prune](https://github.com/rbroggi/btcnode/tree/prune): minimalist [bitcoind](https://en.bitcoin.it/wiki/Bitcoind) node pre-configured as 
 a [prune node](https://bitcoin.org/en/full-node#reduce-storage).
@@ -13,10 +13,10 @@ index transactions ([txindex=1](https://bitcoin.stackexchange.com/questions/3570
 3. [electrs](https://github.com/rbroggi/btcnode/tree/electrs): a full `bitcoind` node with `txindex=1` along with an [electrs](https://github.com/romanz/electrs)
 electrum server. 
 
-In all configurations/environments `bitcoind` operates in conjunction with [TOR](https://wiki.archlinux.org/title/tor)
+In all configurations `bitcoind` operates in conjunction with [TOR](https://wiki.archlinux.org/title/tor)
 for optimal security and anonymity. 
 
-The repo supports 4 basic ways of exposing your bitcoind/electrs service:
+All configurations support 4 ways of exposing your `bitcoind` (and `electrs` when applicable) services:
 
 1. `local` - service API only available in the node (`127.0.0.1`) where the docker-compose environment runs. 
 2. `tor` - service API exposed using a tor hidden service through an onion address.
@@ -31,7 +31,6 @@ For an even stronger configuration, you can
 The optimal runtime environment for this service is a small server where you have the 
 possibility to ssh into. 
 
-
 ## Config and run
 
 the makefile should be your friend:
@@ -43,6 +42,7 @@ Usage:
   up_local                      starts the compose environment where bitcoind is exposed locally to the node.
   down_local                    tears down the docker compose environment.
   .env                          requires user to insert mandatory environment variables and dumps them to a `.env` file.
+  .env.host                     requires user to insert mandatory environment variables and dumps them to a `.env.host` file.
   up_vpn                        starts the compose environment exposing the bitcoind node through tailscaled (VPN).
   down_vpn                      tears down the docker compose vpn environment.
   up_tor                        starts the compose environment exposing the bitcoind node through tor hidden services.
@@ -53,7 +53,7 @@ Usage:
   down_vpn_host                 tears down VPN in the host system.
   test_btc_rpc                  once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
   test_btc_rpc_over_tor         once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
-  recycle_svc                   recycle a service taking into account docker-compose.base.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc)
+  recycle_svc                   recycle a service taking into account docker-compose.base.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc).
   restart_svc                   restarts a service. This will only refresh service-specific configurations (torrc, bitcoin.conf), and not docker-compose.base.yaml updates.
   rotate_btc_user_credentials   rotates the credentials of the user configured to have access to bitcoind RPC APIs.
   generate_service_spec         generates the 'bitcoind.service' systemd specs replacing some environment parameters (project folder and user).
@@ -62,10 +62,20 @@ Usage:
 
 you would typically:
 
-1. start by modifying your `bitcoin/bitcoin.template.conf`, then run the `make generate_bitcoind_conf BTC_USER=<your_btc_rpc_user>`.
-2. `make up_<remote_access_method>` -> this starts your btc node using the desired remote access method. If you choose `vpn` or `all` you will
-have to configure an [emphemeral auth key](https://tailscale.com/kb/1085/auth-keys/).
-3. If all goes well you can use `make generate_service_spec` to generate a 
+1. Checkout the branch that contains the configuration you are most interested in out of (`prune`, `full`, `electrs`);
+2. Modify your `bitcoin/bitcoin.template.conf` and run:
+  ```shell
+  $ # This will prompt for some configurations and generate the bitcoind configuration file: `bitcoin/bitcoin.conf`
+  $ make generate_bitcoind_conf BTC_USER=<your_btc_rpc_user>
+  ```
+3. Start the servers by running:
+  ```shell
+  $ # <remote_access_method> one of local, vpn, tor, all
+  $ make up_<remote_access_method>
+  ``` 
+  > **_NOTE:_**  `vpn` and `all` require you to have configured a tailscale account and will prompt for an [emphemeral auth key](https://tailscale.com/kb/1085/auth-keys/)
+  during the first run
+4. If all goes well you can use `make generate_service_spec` to generate a 
   [systemd service spec](https://www.freedesktop.org/software/systemd/man/systemd.service.html)
 4. If you are satisfied with the systemd service specs you can 
 [create a linux systemd service](https://medium.com/@benmorel/creating-a-linux-service-with-systemd-611b5c8b91d6)
@@ -73,11 +83,11 @@ have to configure an [emphemeral auth key](https://tailscale.com/kb/1085/auth-ke
 ## Word of caution
 
 I have done some checks on the bitcoind docker image that I'm using, but that means that I inherently trust the image registry
-to run this image, this might not be the your case. [Don't trust, verify](https://thebitcoinmanual.com/btc-culture/glossary/dont-trust-verify/)!
+to run this image, this might not be your case. [Don't trust, verify](https://thebitcoinmanual.com/btc-culture/glossary/dont-trust-verify/)!
 
 ## External access
 
-### Using ssh tunnel and local mode 
+### Using `local` mode and ssh tunnel
 
 Start the compose environment: `make up_local`.
 
@@ -113,7 +123,7 @@ Cons:
 * If you are not in the same network as your node, you will have to port-forward your node to the public internet or enable VPN 
 in your node running the docker-compose environment.
 
-### Using TOR 
+### Using `tor` mode
 
 You can also Access your node through TOR network: `make up_tor`
 
@@ -138,7 +148,7 @@ PROS:
 CONS:
 * Very slow;
 
-### Using VPN ([Tailscale](https://tailscale.com/))
+### Using `vpn` mode ([Tailscale](https://tailscale.com/))
 
 You can also Access your node through VPN: `make up_vpn`
 
@@ -157,11 +167,20 @@ PROS:
 * Accessible from anywhere as long as you are in one of the workstations that can access your VPN
 * Fast access;
 
-### Using local And host VPN
+### Using `local` mode and host VPN
 
 You can also start your service locally with `make up_local` and separately start a VPN client in your
-host with `make up_vpn_host`. With this approach you can ssh-tunnel into your node and use the same approach described
-in the `ssh` sessio (for that, your host needs to be running `sshd`).
+host with `make up_vpn_host`. With this approach, you can ssh-tunnel into your node even when not within 
+the same network and use the same approach described in the [local mode section](#using-local-mode-and-ssh-tunnel)
+(for that, your host needs to be running `sshd`, and you need admin privileges in the host).
+
+PROS:
+* No need to have access to a router to port-forward your node service;
+* Accessible from anywhere as long as you are in one of the workstations that can access your VPN
+* Fast access;
+
+CONS:
+* You need to have admin privileges on the host machine.
 
 ### Linux [mDNS](https://en.wikipedia.org/wiki/Multicast_DNS) for simplifying your local setup
 
@@ -192,9 +211,12 @@ ssh -L 8332:localhost:8332 btcnode
 
 ### Accessing the node from the internet
 
-To access your node from the internet, I would suggest you to configure port forwarding in your router
+To access your node from the internet, you can configure port forwarding in your router
 to forward your sshd port. This would allow you to ssh into your node and perform the tunneling technique
-explained above using your public IP instead of your local `mDNS` address or your local network address. 
+explained above using your public IP instead of your local `mDNS` address or your local network address.
+If you don't plan to access your node from workstations that do not belong to your VPN, I would suggest
+you to use the VPN approach as it gives you remote access without the need of port-forwarding (which opens 
+a considerable attack vector).
 
 Consider reading about best-practices whenever exposing your services to the internet.
 
@@ -232,18 +254,30 @@ For more `bitcoin-cli` RPCs, refer to [this](https://developer.bitcoin.org/refer
 
 ## Data
 
-`bitcoin` is mounted in the docker container, and it's where the blockchain is downloaded.
+* `bitcoin/` folder is mounted in the `bitdoind` docker container, and it's where the blockchain is downloaded;
+* `tailscale/btc/` folder will be used to persist VPN data from the `tailscaled` service. This will allow your
+container to maintain the same node identity in the `tailscale` VPN;
+* `tailscale/host/` serves the same purpose as the one above but for the `host-vpn` service which is dettached
+from the main docker-compose environment;
+* `tor/bitcoin_hidden/` will contain information about hidden-service exposed by tor - you can find your onion
+address under this folder in a file called `hostname`.
 
 ## Use tor as SOCKS proxy 
 
 If you want to consult some websites from your workstation hosted in the same network as the node above
-you can leverage the tor proxy to mask your public IP address by using it as proxy (at the price of having 
+you can leverage the tor proxy to mask your public IP address (at the price of having 
 a less performant browsing experience). Check the documentation of your browser for how to configure a SOCKS 
 proxy. The address of your proxy will be `<your-node-ip>:9050`. 
 
 A legit reason/situation for doing that is when you want to check in [mem.pool](https://mempool.space/) for
 a block that might contain a transaction that involves one of your wallets. You can consume the public service
 in a convenient way without having to disclose your IP.
+
+You can also use it in conjunction with `curl`:
+
+```shell
+$ curl --socks5-hostname <tor_proxy> ...
+```
 
 ## References
 
@@ -261,3 +295,4 @@ in a convenient way without having to disclose your IP.
 * [enable debug log level in bitcoind](https://bitcoin.stackexchange.com/questions/66892/what-are-the-debug-categories)
 * [Bitcoind configurations](https://riptutorial.com/bitcoin/example/26000/node-configuration)
 * [TOR arguments](https://2019.www.torproject.org/docs/tor-manual.html.en)
+* [Electrum servers comparison](https://sparrowwallet.com/docs/server-performance.html#:~:text=There%20is%20a%20vast%20difference,transactions%20associated%20with%20an%20address.)
