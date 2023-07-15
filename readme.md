@@ -38,23 +38,24 @@ the makefile should be your friend:
 ```shell
 $ make
 Usage:
+  dump_env                      requires user to insert mandatory environment variables and dumps them to a `.env` file.
+  .env                          checks if .env file exists and if not invoke dump_env.
   generate_bitcoind_conf        generates the bitcoin.conf file from the bitcoin.template.conf. It will prompt for a password to be configured for your bitcoind rpc user.
   up_local                      starts the compose environment where bitcoind is exposed locally to the node.
   down_local                    tears down the docker compose environment.
-  .env                          requires user to insert mandatory environment variables and dumps them to a `.env` file.
-  .env.host                     requires user to insert mandatory environment variables and dumps them to a `.env.host` file.
   up_vpn                        starts the compose environment exposing the bitcoind node through tailscaled (VPN).
   down_vpn                      tears down the docker compose vpn environment.
   up_tor                        starts the compose environment exposing the bitcoind node through tor hidden services.
   down_tor                      tears down the docker compose tor environment.
   up_all                        starts the compose environment exposing the bitcoind node locally, through VPN, and through tor hidden services.
   down_all                      tears down the docker compose all environment.
-  up_vpn_host                   starts VPN in the host system.
-  down_vpn_host                 tears down VPN in the host system.
   test_btc_rpc                  once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
   test_btc_rpc_over_tor         once the cluster is up, you can use this target to test RPC connectivity/authentication/authorization.
   recycle_svc                   recycle a service taking into account docker-compose.base.yaml configuration changes as well as service specific configuration changes (torrc, bitcoin.conf, etc).
   restart_svc                   restarts a service. This will only refresh service-specific configurations (torrc, bitcoin.conf), and not docker-compose.base.yaml updates.
+  .env.host                     requires user to insert mandatory environment variables and dumps them to a `.env.host` file.
+  up_vpn_host                   starts VPN in the host system.
+  down_vpn_host                 tears down VPN in the host system.
   rotate_btc_user_credentials   rotates the credentials of the user configured to have access to bitcoind RPC APIs.
   generate_service_spec         generates the 'bitcoind.service' systemd specs replacing some environment parameters (project folder and user).
   help                          prints this help message.
@@ -66,7 +67,7 @@ you would typically:
 2. Modify your `bitcoin/bitcoin.template.conf` and run:
   ```shell
   $ # This will prompt for some configurations and generate the bitcoind configuration file: `bitcoin/bitcoin.conf`
-  $ make generate_bitcoind_conf BTC_USER=<your_btc_rpc_user>
+  $ make generate_bitcoind_conf
   ```
 3. Start the servers by running:
   ```shell
