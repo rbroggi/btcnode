@@ -32,5 +32,5 @@ networks:
     ipam:
       config:
         # keep aligned with bitcoin.template.conf and bitcoin.conf
-        - subnet: 172.31.0.0/24
-          gateway: 172.31.0.1
+        - subnet: ${DOCKER_SUBNET_MASK:-172.31.0.0/24}
+          gateway: ${DOCKER_NET_GATEWAY:-172.31.0.1}
