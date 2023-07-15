@@ -7,18 +7,21 @@ default: help
 .PHONY: dump_env
 ## dump_env: requires user to insert mandatory environment variables and dumps them to a `.env` file.
 dump_env:
-	@read -p "Enter the tailscale token if you intend to use vpn: " token && echo "TS_AUTHKEY='$$token'" > .env
+	@read -p "Enter the tailscale token if you intend to use vpn: " token && echo "TS_AUTHKEY='$$token'" > .env.tmp
 	@echo "subnet masks currently under use: "
 	@$(DOCKER_CMD) network ls -q | xargs $(DOCKER_CMD) network inspect --format='{{range .IPAM.Config}}{{.Subnet}}{{end}}' | tr -s '\n'
 	@read -p "Optionally override docker subnet mask [default: 172.31.0.0/24]: " subnet \
 		&& subnet=$${subnet:-172.31.0.0/24} \
-		&& echo "DOCKER_SUBNET_MASK='$$subnet'" >> .env
+		&& echo "DOCKER_SUBNET_MASK='$$subnet'" >> .env.tmp
 	@read -p "Optionally override docker network gateway [default: 172.31.0.1]: " gateway \
 		&& gateway=$${gateway:-172.31.0.1} \
-		&& echo "DOCKER_NET_GATEWAY='$$gateway'" >> .env
+		&& echo "DOCKER_NET_GATEWAY='$$gateway'" >> .env.tmp
 	@read -p "Enter the username you intend to use to authenticate against bitcoind RPC calls: " username \
-		&& echo "BTC_USER='$$username'" >> .env \
-		&& $(DOCKER_CMD) run -it --rm  -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp python:3.12.0b3-alpine3.18 python rpcauth.py $$username .env
+		&& echo "BTC_USER='$$username'" >> .env.tmp \
+		&& $(DOCKER_CMD) run -it --rm  -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp python:3.12.0b3-alpine3.18 python rpcauth.py $$username .env.tmp
+	@echo "backing up existing .env if exist, error to be ignored"
+	@-mv .env .env.bkp.$(shell date +"%Y%m%dT%H%M%S")
+	@mv .env.tmp .env
 
 
 .PHONY: .env
@@ -34,7 +37,7 @@ endif
 .PHONY: generate_bitcoind_conf
 ## generate_bitcoind_conf: generates the bitcoin.conf file from the bitcoin.template.conf. It will prompt for a password to be configured for your bitcoind rpc user.
 generate_bitcoind_conf: .env
-	@source .env && \
+	@source ./.env && \
 		echo $$RPCAUTH && \
 		cat bitcoin/bitcoin.template.conf \
 		| sed "s@^rpcauth.*@rpcauth=$$RPCAUTH@g" \
@@ -143,7 +146,7 @@ down_vpn_host:
 .PHONY: rotate_btc_user_credentials
 ## rotate_btc_user_credentials: rotates the credentials of the user configured to have access to bitcoind RPC APIs.
 rotate_btc_user_credentials: .env
-	@source .env && $(DOCKER_CMD) run -it --rm  -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp python:3.12.0b3-alpine3.18 python rpcauth.py $$BTC_USER .env
+	@source ./.env && $(DOCKER_CMD) run -it --rm  -v "$(shell pwd)":/usr/src/myapp -w /usr/src/myapp python:3.12.0b3-alpine3.18 python rpcauth.py $$BTC_USER .env
 	$(MAKE) generate_bitcoind_conf
 
 .PHONY: generate_service_spec
