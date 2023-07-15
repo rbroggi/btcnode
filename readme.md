@@ -279,6 +279,23 @@ You can also use it in conjunction with `curl`:
 $ curl --socks5-hostname <tor_proxy> ...
 ```
 
+## Docker subnet
+
+Since `bitcoind` needs to explicit authorize traffic incoming from within the docker-compose environment 
+container, we need to keep consistency between the IP submask of the network container (defined in `docker-compose.base.yaml`)
+and the one configured in `bitcoind.conf`. 
+You can query your system which submasks are already in use and pick one that does not exist:
+
+```shell
+$ docker network inspect $(docker network ls -q) | jq '.[].IPAM.Config[].Subnet'
+"172.17.0.0/16"                                                                                                                                   │
+"172.31.0.0/24"                                                                                                                                   │
+"172.32.0.0/24"
+```
+
+For the response above you can pick `172.33.0.0/24` and replace the content of `docker-compose.base.yaml` and of the
+`bitcoind.conf`.
+
 ## References
 
 * [host your hidden service with onion addresses](https://null-byte.wonderhowto.com/how-to/host-your-own-tor-hidden-service-with-custom-onion-address-0180159/)
@@ -296,3 +313,4 @@ $ curl --socks5-hostname <tor_proxy> ...
 * [Bitcoind configurations](https://riptutorial.com/bitcoin/example/26000/node-configuration)
 * [TOR arguments](https://2019.www.torproject.org/docs/tor-manual.html.en)
 * [Electrum servers comparison](https://sparrowwallet.com/docs/server-performance.html#:~:text=There%20is%20a%20vast%20difference,transactions%20associated%20with%20an%20address.)
+* [systemctl useful commands](https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units)
