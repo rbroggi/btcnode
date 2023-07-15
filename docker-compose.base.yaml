@@ -27,7 +27,7 @@ services:
       - "9050:9050"
 
   electrs:
-    cointainer_name: electrs
+    container_name: electrs
     user: 1000:1000
     build:
       dockerfile: Dockerfile.electrs
