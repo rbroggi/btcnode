@@ -2,3 +2,4 @@ bitcoind.service
 bitcoin/bitcoin.conf
 .env
 .env.host
+venv
