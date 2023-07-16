@@ -46,12 +46,12 @@ generate_bitcoind_conf: .env
 .PHONY: up_local
 ## up_local: starts the compose environment where bitcoind is exposed locally to the node.
 up_local: .env
-	$(DOCKER_COMPOSE_CMD) -f docker-compose.base.yaml -f docker-compose.local.yaml up -d
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.local.yaml up -d
 
 .PHONY: down_local
 ## down_local: tears down the docker compose environment.
 down_local: .env
-	$(DOCKER_COMPOSE_CMD) -f docker-compose.base.yaml -f docker-compose.local.yaml down
+	$(DOCKER_COMPOSE_CMD) --env-file ./.env -f docker-compose.base.yaml -f docker-compose.local.yaml down
 
 .PHONY: up_vpn
 ## up_vpn: starts the compose environment exposing the bitcoind node through tailscaled (VPN).
