@@ -4,7 +4,7 @@ services:
     container_name: tailscaled
     hostname: tailscaled
     user: 1000:1000
-    image: tailscale/tailscale:v1.44.0
+    image: tailscale/tailscale:v1.68.1
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_USERSPACE=TRUE
