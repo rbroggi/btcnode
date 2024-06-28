@@ -1,5 +1,5 @@
 # set alpine as the base image of the Dockerfile
-FROM alpine:3.18
+FROM alpine:3.20
 
 RUN adduser -D --uid 1000 tor tor 
 
