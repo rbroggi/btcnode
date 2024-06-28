@@ -12,7 +12,10 @@ services:
     volumes:
       - ./tailscale/btc/var/lib:/var/lib
     ports:
-      - "127.0.0.1:8332:8332" # only local publication, use in conjunction with ssh tunnel
+      # expose bitcoind locally, use in conjunction with ssh tunnel
+      - "127.0.0.1:8332:8332"
+      # expose electrs locally, use in conjunction with ssh tunnel
+      - "127.0.0.1:50001:50001"
     networks:
       - btc
 

@@ -6,8 +6,6 @@ services:
 
   electrs:
     depends_on:
-      tailscaled:
-        condition: service_started
       bitcoind:
         condition: service_started
     networks:
